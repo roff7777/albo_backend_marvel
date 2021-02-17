@@ -1,5 +1,11 @@
-const express = require("express");
-const app = express();
+const functions = require('firebase-functions');
+
+let express = require('express');
+let app = express();
+app.get('/', (request, response)=>{
+  response.send("The best app");
+})
+
 
 app.get('/colaborators/:userId', (req, res) => {
     return res.send(
@@ -21,6 +27,7 @@ app.get('/colaborators/:userId', (req, res) => {
 });
 
 app.get('/characters/:userId', (req, res) => {
+    console.log(req.params.userId)
     return res.send(
         {
             'last_sync': 'Fecha de la última sincronización en dd/mm/yyyy hh:mm:ss', 
@@ -38,7 +45,4 @@ app.get('/characters/:userId', (req, res) => {
     )
 });
 
-
-app.listen(3000, () => {
-    console.log("El servidor está inicializado en el puerto 3000");
-});
+exports.app = functions.https.onRequest(app);
