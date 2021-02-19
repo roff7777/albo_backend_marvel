@@ -7,7 +7,6 @@ app.get('/', (request, response)=>{
   response.send("The best app");
 })
 
-
 Parse.serverURL = 'https://parseapi.back4app.com'; // This is your Server URL
 Parse.initialize(
   'D5oj2d9hl14GgupWVJ2S9vJbsMLfSchlwhXbfi25', // This is your Application ID
@@ -16,7 +15,6 @@ Parse.initialize(
 );
 
 async function getCreators(alboName){
-    console.log(alboName)
     const Character = Parse.Object.extend('Character')
     const query = new Parse.Query(Character)
     query.equalTo("alboName", alboName)
@@ -33,38 +31,61 @@ async function getCreators(alboName){
 
         return formated
     }else{
-        return null;
+        return undefined;
     }
 }
 
+async function getSharedCharacters(alboName){
+    const Character = Parse.Object.extend('Character')
+    const query = new Parse.Query(Character)
+    query.equalTo("alboName", alboName)
 
+    const result = await query.first()
+    if(result){
+        let formated = { last_sync: result.get('lastSync')}
+        let sharedCharacters = result.get('shared')
+        let resultShared = []
+        for (let prop in sharedCharacters) {
+            if (Object.prototype.hasOwnProperty.call(sharedCharacters, prop)) {
+                resultShared.push({
+                    character: prop,
+                    comics : sharedCharacters[prop]
+                })
+            }
+        }
+        formated[`characters`] = resultShared
+        return formated
+    }else{
+        return undefined;
+    }
+}
 
 app.get('/colaborators/:alboName', async (req, res) => {
-    
-    let result = await getCreators(req.params.alboName)
-    
-    console.log(result)
+    try{
+        let result = await getCreators(req.params.alboName)
+        
+        if(result){
+            return res.send(result);
+        }
+        return res.send(404).send()
 
-    return res.send(result);
+    }catch(e){
+        return res.status(500).send(e)
+    }
 });
 
-app.get('/characters/:userId', (req, res) => {
-    console.log(req.params.userId)
-    return res.send(
-        {
-            'last_sync': 'Fecha de la última sincronización en dd/mm/yyyy hh:mm:ss', 
-            'characters' : [
-                {
-                    'character': 'Squirrel Girl',
-                    'comics' : ['The Unbeateable Squirrel Girl (2015) #38','The Unbeateable Squirrel Girl(2015) #39']
-                },
-                {
-                    'character': 'Jocasta',
-                    'comics' :['Tony Stark: Iron Man (2018) #2','Tony Stark: Iron Man (2018) #3']
-                },
-            ]
+app.get('/characters/:alboName', async (req, res) => {
+    try{
+        let result = await getSharedCharacters(req.params.alboName)
+        
+        if(result){
+            return res.send(result);
         }
-    )
+        return res.send(404).send()
+
+    }catch(e){
+        return res.status(500).send(e)
+    }
 });
 
 exports.app = functions.https.onRequest(app);
