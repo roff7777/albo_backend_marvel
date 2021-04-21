@@ -88,4 +88,12 @@ app.get('/characters/:alboName', async (req, res) => {
     }
 });
 
+app.get('/article/search/:alboName', async (req, res) => {
+    try{
+        return res.send(404).send()
+    }catch(e){
+        return res.status(500).send(e)
+    }
+});
+
 exports.app = functions.https.onRequest(app);
